@@ -1,5 +1,9 @@
 Revision history for Perl extension optimizer.
 
+0.05  Mon Dec 30 09:45:09 CET 2002
+	- Applied patch from greg that removes debugging prints
+	  [rt.cpan.org 1475] http://rt.cpan.org/NoAuth/Bug.html?id=1475
+
 0.04  Sun Dec 29 17:29:05 CET 2002
 	- Add support for multiple 'sub-detect' callbacks
 

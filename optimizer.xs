@@ -152,14 +152,10 @@ relocatetopad(pTHX_ OP* op,CV* cv)
                 /* XXX I don't know how this isn't readonly already. */
                 SvREADONLY_on(PL_curpad[ix]);
             }
-	    printf("10\n");
             o->op_sv = Nullsv;
             o->op_targ = ix;
-	    printf("11\n");
         }
-	printf("12\n");
         PL_curpad = tmp_pad;
-	printf("13\n");
 #endif
 }
 

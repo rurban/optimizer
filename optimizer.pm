@@ -9,7 +9,7 @@ use strict;
 use warnings;
 
 require DynaLoader;
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 our @ISA=q(DynaLoader);
 our %callbacks;
 bootstrap optimizer $VERSION;
