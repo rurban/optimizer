@@ -6,3 +6,4 @@ optimizer.pm
 optimizer.xs
 README
 test.pl
+typemap

@@ -9,7 +9,7 @@ use strict;
 use warnings;
 
 require DynaLoader;
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 our @ISA=q(DynaLoader);
 
 bootstrap optimizer $VERSION;
@@ -47,7 +47,8 @@ sub import {
         optimizer::install( sub { callbackoptimizer($_[0],$subref) }) if $type eq "callback";
         optimizer::install( sub { optimizer::peepextend($_[0], $subref) }) if $type eq "extend";
         optimizer::install( $subref ) if $type eq "mine";
-
+    } elsif ($type eq 'extend-c') {
+      optimizer::c_extend_install(shift);
     } else { croak "Unknown optimizer option '$type'"; }
 }
 
@@ -60,7 +61,7 @@ sub callbackoptimizer {
     while ($$op) {
         $op->seq(optimizer::op_seqmax_inc());
         update($op) if $op->isa("B::COP");
-        relocatetopad($op) if $op->name eq "const"; # For thread safety
+        relocatetopad($op, $op->find_cv()) if $op->name eq "const"; # For thread safety
 
         $callback->($op);
         $op = $op->next;
@@ -87,7 +88,7 @@ sub peepextend {
             optimizer::die("Bareword ",$o->sv->sv, " not allowed while \"strict subs\" in use")
                 if ($o->private & 8);
 
-            relocatetopad($o);
+            relocatetopad($o,$o->find_cv());
             $o->seq(optimizer::op_seqmax_inc());
         } elsif ($o->name eq "concat") {
             if ($o->next && $o->next->name eq "stringify" and !($o->flags &64)) {
@@ -95,7 +96,7 @@ sub peepextend {
                     $o->targ($o->next->targ);
                     $o->next->targ(0);
                 }
-                $o->null;
+                #$o->null;
             }
             $o->seq(optimizer::op_seqmax_inc());
         #} elsif ($o->name eq "stub") {
@@ -170,6 +171,11 @@ optimizer - Write your own Perl optimizer, in Perl
 
   # Completely implement your own optimizre
   use optimizer mine => sub { ... }
+
+  # use the standard optimizer with an extra callback
+  # this is the most compatible optimizer version
+  use optimizer extend-c => sub { print $_[0]->name() };
+
 
   no optimizer; # Use the simplest working optimizer
 

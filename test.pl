@@ -6,9 +6,12 @@
 # change 'tests => 1' to 'tests => last_test_to_print';
 
 use Test;
-BEGIN { plan tests => 1 };
-use optimizer 'C';
+BEGIN { plan tests => 2 };
+use optimizer 'extend-c' => sub { };
 ok(1); # If we made it this far, we're ok.
+
+my $foo = 2;
+ok($foo);
 
 #########################
 
