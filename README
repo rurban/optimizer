@@ -1,6 +1,4 @@
-optimizer version 0.01
-======================
-
+NAME
     optimizer - Write your own Perl optimizer, in Perl
 
 SYNOPSIS
@@ -21,6 +19,14 @@ SYNOPSIS
       # Completely implement your own optimizre
       use optimizer mine => sub { ... }
 
+      # use the standard optimizer with an extra callback
+      # this is the most compatible optimizer version
+      use optimizer extend-c => sub { print $_[0]->name() };
+
+      # don't provide a peep optimizer, rather get a callback
+      # after we are finished with every code block
+      use optimizer sub-detect => sub { print $_[0]->name() };
+
       no optimizer; # Use the simplest working optimizer
 
 DESCRIPTION
@@ -31,7 +37,8 @@ DESCRIPTION
     distribution; this patch allows the optimizer to be pluggable and
     replaceable with a C function pointer. This module provides the glue
     between the C function and a Perl subroutine. It is hoped that the patch
-    will be integrated into the Perl core at some point soon.
+    will be integrated into the Perl core at some point soon. This patch is
+    integrated as of perl 5.8.
 
     Your optimizer subroutine will be handed a "B::OP"-derived object
     representing the first (NOT the root) op in the program. You are
@@ -56,25 +63,21 @@ DESCRIPTION
     The "callback" option to this module will essentially do the above,
     calling your given subroutine with each op.
 
-INSTALLATION
+    If you just want to use this function to get a callback after every code
+    block is compiled so you can do any arbitrary work on it use the
+    "sub-detect" option, you will be passed LEAVE* ops after the standard
+    peep optimizer has been run, this minimises the risk for bugs as we use
+    the standard one. The op tree you are handed is also stable so you are
+    free to work on it. This is usefull if you are limited by "CHECK" and
+    "INIT" blocks as this works with string eval and "require" aswell.
 
-To install this module type the following:
+AUTHOR
+    Simon Cozens, "simon@cpan.org"
 
-   perl Makefile.PL
-   make
-   make test
-   make install
+    Extended functionality and current maintainer.
 
-DEPENDENCIES
+    Arthur Bergman, "abergman@cpan.org"
 
-THIS MODULE REQUIRES A CORE PATCH. Stop now if that
-worries you.
-
-    B::Generate
-
-COPYRIGHT AND LICENCE
-
-GPL & AL
-
-Copyright (C) 2001 Simon Cozens
+SEE ALSO
+    B::Generate, optimize
 

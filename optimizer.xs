@@ -531,6 +531,34 @@ c_extend_peep(pTHX_ register OP *o)
     LEAVE;
 }
 
+void
+c_sub_detect(pTHX_ register OP *o)
+{
+
+  /* Here we call the perl peep function so we don't get bit by
+     by the fact that doing stuff while optimization is highly dangerous
+  */
+    
+  peep(o);
+    
+  /* Since we get the start here, we should try and find the
+     leave by following next until we find it
+  */
+
+  while(o) {
+    if(o->op_next) 
+      o = o->op_next;
+    else 
+      break;
+  }
+  if(o->op_type == OP_LEAVESUB   ||
+     o->op_type == OP_LEAVESUBLV ||
+     o->op_type == OP_LEAVE      ||
+     o->op_type == OP_LEAVEEVAL) {
+      peep_callback(aTHX_ o);
+  }
+
+}
 
 
 
@@ -551,6 +579,12 @@ void
 PEEP_c_extend_install(SV* subref)
      CODE:
      PL_peepp = c_extend_peep;
+     peep_in_perl = newSVsv(subref);
+
+void
+PEEP_c_sub_detect_install(SV* subref)
+     CODE:
+     PL_peepp = c_sub_detect;
      peep_in_perl = newSVsv(subref);
 
 void

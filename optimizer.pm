@@ -9,7 +9,7 @@ use strict;
 use warnings;
 
 require DynaLoader;
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 our @ISA=q(DynaLoader);
 
 bootstrap optimizer $VERSION;
@@ -49,6 +49,8 @@ sub import {
         optimizer::install( $subref ) if $type eq "mine";
     } elsif ($type eq 'extend-c') {
       optimizer::c_extend_install(shift);
+    } elsif ($type eq 'sub-detect') {
+      optimizer::c_sub_detect_install(shift);
     } else { croak "Unknown optimizer option '$type'"; }
 }
 
@@ -176,6 +178,9 @@ optimizer - Write your own Perl optimizer, in Perl
   # this is the most compatible optimizer version
   use optimizer extend-c => sub { print $_[0]->name() };
 
+  # don't provide a peep optimizer, rather get a callback
+  # after we are finished with every code block
+  use optimizer sub-detect => sub { print $_[0]->name() };
 
   no optimizer; # Use the simplest working optimizer
 
@@ -189,7 +194,7 @@ module distribution; this patch allows the optimizer to be
 pluggable and replaceable with a C function pointer. This module
 provides the glue between the C function and a Perl subroutine. It 
 is hoped that the patch will be integrated into the Perl core at 
-some point soon.
+some point soon. This patch is integrated as of perl 5.8.
 
 Your optimizer subroutine will be handed a C<B::OP>-derived object
 representing the first (NOT the root) op in the program. You are
@@ -214,12 +219,25 @@ incremented sequence number. Do something like this:
 The C<callback> option to this module will essentially do the above,
 calling your given subroutine with each op. 
 
+If you just want to use this function to get a callback after every
+code block is compiled so you can do any arbitrary work on it use the
+C<sub-detect> option, you will be passed LEAVE* ops after the standard
+peep optimizer has been run, this minimises the risk for bugs as we 
+use the standard one. The op tree you are handed is also stable so you
+are free to work on it. This is usefull if you are limited by 
+C<CHECK> and C<INIT> blocks as this works with string eval and
+C<require> aswell.
+
 =head1 AUTHOR
 
 Simon Cozens, C<simon@cpan.org>
 
+Extended functionality and current maintainer.
+
+Arthur Bergman, C<abergman@cpan.org>
+
 =head1 SEE ALSO
 
-L<B::Generate>
+L<B::Generate>, L<optimize>
 
 =cut

@@ -1,5 +1,10 @@
 Revision history for Perl extension optimizer.
 
+0.03  Sat Dec 28 23:13:02 CET 2002
+        - Added support for use optimizer 'sub-detect', which
+	  callbacks on every code block it finds after that
+	  block has been compiled.
+
 0.02  Wed Jun 26 19:44:29 CEST 2002
 	- Added support use optimizer 'extend-c', which extends
 	  perls default C based optimizer.
