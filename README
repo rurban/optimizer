@@ -1,0 +1,80 @@
+optimizer version 0.01
+======================
+
+    optimizer - Write your own Perl optimizer, in Perl
+
+SYNOPSIS
+      # Use Perl's default optimizer
+      use optimizer 'C'; 
+
+      # Use a Perl implementation of the default optimizer
+      use optimizer 'perl'; 
+
+      # Use an extension of the default optimizer
+      use optimizer extend => sub {
+            warn "goto considered harmful" if $_[0]-1>name eq "goto"
+      }
+
+      # Use a simple optimizer with callbacks for each op
+      use optimizer callback => sub { .. }
+
+      # Completely implement your own optimizre
+      use optimizer mine => sub { ... }
+
+      no optimizer; # Use the simplest working optimizer
+
+DESCRIPTION
+    This module allows you to replace the default Perl optree optimizer,
+    "peep", with a Perl function of your own devising.
+
+    It requires a Perl patched with the patch supplied with the module
+    distribution; this patch allows the optimizer to be pluggable and
+    replaceable with a C function pointer. This module provides the glue
+    between the C function and a Perl subroutine. It is hoped that the patch
+    will be integrated into the Perl core at some point soon.
+
+    Your optimizer subroutine will be handed a "B::OP"-derived object
+    representing the first (NOT the root) op in the program. You are
+    expected to be fluent with the "B" module to know what to do with this.
+    You can use "B::Generate" to fiddle around with the optree you are
+    given, while traversing it in execution order.
+
+    If you choose complete control over your optimizer, you must assign
+    sequence numbers to operations. This can be done via the
+    "optimizer::op_seqmax_inc" function, which supplies a new incremented
+    sequence number. Do something like this:
+
+        while ($$op) {
+            $op->seq(optimizer::op_seqmax_inc);
+
+            ... more optimizations ...
+
+            $op = $op->next; 
+            last unless $op->can("next"); # Shouldn't get here
+        }
+
+    The "callback" option to this module will essentially do the above,
+    calling your given subroutine with each op.
+
+INSTALLATION
+
+To install this module type the following:
+
+   perl Makefile.PL
+   make
+   make test
+   make install
+
+DEPENDENCIES
+
+THIS MODULE REQUIRES A CORE PATCH. Stop now if that
+worries you.
+
+    B::Generate
+
+COPYRIGHT AND LICENCE
+
+GPL & AL
+
+Copyright (C) 2001 Simon Cozens
+

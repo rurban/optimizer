@@ -1,0 +1,8 @@
+Changes
+Makefile.PL
+plugpeep.patch
+MANIFEST
+optimizer.pm
+optimizer.xs
+README
+test.pl
