@@ -1,5 +1,8 @@
 Revision history for Perl extension optimizer.
 
+0.04  Sun Dec 29 17:29:05 CET 2002
+	- Add support for multiple 'sub-detect' callbacks
+
 0.03  Sat Dec 28 23:13:02 CET 2002
         - Added support for use optimizer 'sub-detect', which
 	  callbacks on every code block it finds after that

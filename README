@@ -69,7 +69,8 @@ DESCRIPTION
     peep optimizer has been run, this minimises the risk for bugs as we use
     the standard one. The op tree you are handed is also stable so you are
     free to work on it. This is usefull if you are limited by "CHECK" and
-    "INIT" blocks as this works with string eval and "require" aswell.
+    "INIT" blocks as this works with string eval and "require" aswell. Only
+    one callback per package is allowed.
 
 AUTHOR
     Simon Cozens, "simon@cpan.org"

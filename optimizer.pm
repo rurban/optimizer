@@ -9,9 +9,9 @@ use strict;
 use warnings;
 
 require DynaLoader;
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 our @ISA=q(DynaLoader);
-
+our %callbacks;
 bootstrap optimizer $VERSION;
 
 my ($file, $line) = ("unknown", "unknown");
@@ -48,9 +48,12 @@ sub import {
         optimizer::install( sub { optimizer::peepextend($_[0], $subref) }) if $type eq "extend";
         optimizer::install( $subref ) if $type eq "mine";
     } elsif ($type eq 'extend-c') {
+
       optimizer::c_extend_install(shift);
     } elsif ($type eq 'sub-detect') {
-      optimizer::c_sub_detect_install(shift);
+      my ($package, $filename, $line) = caller;
+      $callbacks{$package} = shift;
+      optimizer::c_sub_detect_install();
     } else { croak "Unknown optimizer option '$type'"; }
 }
 
@@ -226,7 +229,7 @@ peep optimizer has been run, this minimises the risk for bugs as we
 use the standard one. The op tree you are handed is also stable so you
 are free to work on it. This is usefull if you are limited by 
 C<CHECK> and C<INIT> blocks as this works with string eval and
-C<require> aswell.
+C<require> aswell. Only one callback per package is allowed.
 
 =head1 AUTHOR
 

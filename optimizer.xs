@@ -551,11 +551,22 @@ c_sub_detect(pTHX_ register OP *o)
     else 
       break;
   }
+  if(!o)
+    return;
   if(o->op_type == OP_LEAVESUB   ||
      o->op_type == OP_LEAVESUBLV ||
      o->op_type == OP_LEAVE      ||
      o->op_type == OP_LEAVEEVAL) {
-      peep_callback(aTHX_ o);
+    HE *entry;
+    HV *callbacks = get_hv("optimizer::callbacks", 1);
+    hv_iterinit(callbacks);
+    while ((entry = hv_iternext(callbacks))) {
+      peep_in_perl = HeVAL(entry);
+      peep_callback(aTHX_ o);	
+    }
+    
+    
+
   }
 
 }
@@ -582,10 +593,9 @@ PEEP_c_extend_install(SV* subref)
      peep_in_perl = newSVsv(subref);
 
 void
-PEEP_c_sub_detect_install(SV* subref)
+PEEP_c_sub_detect_install()
      CODE:
      PL_peepp = c_sub_detect;
-     peep_in_perl = newSVsv(subref);
 
 void
 PEEP_install(SV* subref)
