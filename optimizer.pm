@@ -4,12 +4,12 @@ use B;
 { no warnings 'redefine';
 use B::Generate;
 }
-use 5.7.2;
+use 5.007002;
 use strict;
 use warnings;
 
 require DynaLoader;
-our $VERSION = '0.05';
+our $VERSION = '0.06_01';
 our @ISA=q(DynaLoader);
 our %callbacks;
 bootstrap optimizer $VERSION;

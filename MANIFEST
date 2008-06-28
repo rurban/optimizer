@@ -9,3 +9,4 @@ t/01.t
 t/02-sub_detect.t
 t/03-multi_sub_detect.t
 typemap
+META.yml                                 Module meta-data (added by MakeMaker)
