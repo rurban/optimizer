@@ -1,12 +1,14 @@
 Changes
+eg/pad.pl
 Makefile.PL
-plugpeep.patch
 MANIFEST
 optimizer.pm
 optimizer.xs
+plugpeep.patch
 README
 t/01.t
 t/02-sub_detect.t
 t/03-multi_sub_detect.t
+t/04-use.t
 typemap
 META.yml                                 Module meta-data (added by MakeMaker)

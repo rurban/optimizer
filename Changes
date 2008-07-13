@@ -1,10 +1,10 @@
 Revision history for Perl extension optimizer.
 
-0.06_01  2008-06-28 20:03:15 rurban
-	- fixes for 5.8.8
-
-0.06  2008-06-15 19:27:15
-	- 5.10 and 5.11 patch by Reini Urban <rurban@cpan.org>
+0.06  2008-07-13 19:44:57 Reini Urban <rurban@cpan.org>
+	- 5.10 and 5.11 patch, fixes for 5.8.8
+	- Iop_seqmax and B::OP::seq workaround for 5.10 callbacks
+	- added eg/pad.pl
+	- added t/04-use.t
 
 0.05  Mon Dec 30 09:45:09 CET 2002
 	- Applied patch from greg that removes debugging prints

@@ -1,11 +1,11 @@
 --- #YAML:1.0
 name:                optimizer
-version:             0.06_01
+version:             0.06
 abstract:            Write your own Perl optimizer, in Perl
 license:             ~
 author:              
     - Arthur Bergman <abergman@cpan.org>
-generated_by:        ExtUtils::MakeMaker version 6.42
+generated_by:        ExtUtils::MakeMaker version 6.44
 distribution_type:   module
 requires:     
     B::Generate:                   0

@@ -2,14 +2,28 @@ package optimizer;
 use Carp;
 use B;
 { no warnings 'redefine';
-use B::Generate;
+  use B::Generate;
 }
 use 5.007002;
 use strict;
 use warnings;
 
+BEGIN {
+  # op_seq workaround for 5.10, store it as package global.
+  my $seq = 0;
+  if ($] > 5.009) {
+    eval q(
+    package B::OP;
+    sub seq {
+      my $self = shift;
+      @_ ? $optimizer::seq = shift : $optimizer::seq;
+    }
+   );
+  }
+}
+
 require DynaLoader;
-our $VERSION = '0.06_01';
+our $VERSION = '0.06';
 our @ISA=q(DynaLoader);
 our %callbacks;
 bootstrap optimizer $VERSION;
@@ -17,7 +31,7 @@ bootstrap optimizer $VERSION;
 my ($file, $line) = ("unknown", "unknown");
 
 {
-sub preparewarn { 
+sub preparewarn {
     my $args = join '', @_;
     $args = "Something's wrong " unless $args;
     $args .= " at $file line $line.\n" unless substr($args, length($args) -1) eq "\n";
@@ -48,7 +62,6 @@ sub import {
         optimizer::install( sub { optimizer::peepextend($_[0], $subref) }) if $type eq "extend";
         optimizer::install( $subref ) if $type eq "mine";
     } elsif ($type eq 'extend-c') {
-
       optimizer::c_extend_install(shift);
     } elsif ($type eq 'sub-detect') {
       my ($package, $filename, $line) = caller;
@@ -64,7 +77,7 @@ sub unimport {
 sub callbackoptimizer {
     my ($op, $callback) = @_;
     while ($$op) {
-        $op->seq(optimizer::op_seqmax_inc());
+	$op->seq(optimizer::op_seqmax_inc());
         update($op) if $op->isa("B::COP");
         relocatetopad($op, $op->find_cv()) if $op->name eq "const"; # For thread safety
 
@@ -115,7 +128,7 @@ sub peepextend {
                 next;
             }
             $o->seq(optimizer::op_seqmax_inc());
-        #} elsif ($o->name eq "gv") { 
+        #} elsif ($o->name eq "gv") {
         #    CORE::die "Eep.";
         } elsif ($o->name =~ /^((map|grep)while|(and|or)(assign)?|cond_expr|range)$/) {
             $o->seq(optimizer::op_seqmax_inc());
@@ -123,12 +136,16 @@ sub peepextend {
             peepextend($o->other, $callback); # Weee.
         } elsif ($o->name =~ /^enter(loop|iter)/) {
             $o->seq(optimizer::op_seqmax_inc());
-            $o->redoop($o->redoop->next) while $o->redoop->name eq "null"; peepextend($o->redoop, $callback);
-            $o->nextop($o->nextop->next) while $o->nextop->name eq "null"; peepextend($o->nextop, $callback);
-            $o->lastop($o->lastop->next) while $o->lastop->name eq "null"; peepextend($o->lastop, $callback);
+            $o->redoop($o->redoop->next) while $o->redoop->name eq "null";
+	    peepextend($o->redoop, $callback);
+            $o->nextop($o->nextop->next) while $o->nextop->name eq "null";
+	    peepextend($o->nextop, $callback);
+            $o->lastop($o->lastop->next) while $o->lastop->name eq "null";
+	    peepextend($o->lastop, $callback);
         } elsif ($o->name eq "qr" or $o->name eq "match" or $o->name eq "subst") {
             $o->seq(optimizer::op_seqmax_inc());
-            $o->pmreplstart($o->pmreplstart->next) while ${$o->pmreplstart} and $o->pmreplstart->name eq "null"; 
+            $o->pmreplstart($o->pmreplstart->next)
+	      while ${$o->pmreplstart} and $o->pmreplstart->name eq "null";
             peepextend($o->pmreplstart, $callback);
         } elsif ($o->name eq "exec") {
             $o->seq(optimizer::op_seqmax_inc());
@@ -148,7 +165,7 @@ sub peepextend {
         $o = $o->next;
         last unless $o->can("next"); # Shouldn't get here
     }
-}    
+}
 
 1;
 __END__
@@ -161,10 +178,10 @@ optimizer - Write your own Perl optimizer, in Perl
 =head1 SYNOPSIS
 
   # Use Perl's default optimizer
-  use optimizer 'C'; 
+  use optimizer 'C';
 
   # Use a Perl implementation of the default optimizer
-  use optimizer 'perl'; 
+  use optimizer 'perl';
 
   # Use an extension of the default optimizer
   use optimizer extend => sub {
@@ -179,11 +196,11 @@ optimizer - Write your own Perl optimizer, in Perl
 
   # use the standard optimizer with an extra callback
   # this is the most compatible optimizer version
-  use optimizer extend-c => sub { print $_[0]->name() };
+  use optimizer 'extend-c' => sub { print $_[0]->name() };
 
   # don't provide a peep optimizer, rather get a callback
   # after we are finished with every code block
-  use optimizer sub-detect => sub { print $_[0]->name() };
+  use optimizer 'sub-detect' => sub { print $_[0]->name() };
 
   no optimizer; # Use the simplest working optimizer
 
@@ -192,18 +209,18 @@ optimizer - Write your own Perl optimizer, in Perl
 This module allows you to replace the default Perl optree
 optimizer, C<peep>, with a Perl function of your own devising.
 
-It requires a Perl patched with the patch supplied with the 
+It requires a Perl patched with the patch supplied with the
 module distribution; this patch allows the optimizer to be
 pluggable and replaceable with a C function pointer. This module
-provides the glue between the C function and a Perl subroutine. It 
-is hoped that the patch will be integrated into the Perl core at 
+provides the glue between the C function and a Perl subroutine. It
+is hoped that the patch will be integrated into the Perl core at
 some point soon. This patch is integrated as of perl 5.8.
 
 Your optimizer subroutine will be handed a C<B::OP>-derived object
 representing the first (NOT the root) op in the program. You are
 expected to be fluent with the C<B> module to know what to do with this.
 You can use C<B::Generate> to fiddle around with the optree you are
-given, while traversing it in execution order. 
+given, while traversing it in execution order.
 
 If you choose complete control over your optimizer, you B<must> assign
 sequence numbers to operations. This can be done via the
@@ -215,29 +232,39 @@ incremented sequence number. Do something like this:
 
         ... more optimizations ...
 
-        $op = $op->next; 
+        $op = $op->next;
         last unless $op->can("next"); # Shouldn't get here
     }
 
 The C<callback> option to this module will essentially do the above,
-calling your given subroutine with each op. 
+calling your given subroutine with each op.
 
 If you just want to use this function to get a callback after every
 code block is compiled so you can do any arbitrary work on it use the
 C<sub-detect> option, you will be passed LEAVE* ops after the standard
-peep optimizer has been run, this minimises the risk for bugs as we 
+peep optimizer has been run, this minimises the risk for bugs as we
 use the standard one. The op tree you are handed is also stable so you
-are free to work on it. This is usefull if you are limited by 
+are free to work on it. This is usefull if you are limited by
 C<CHECK> and C<INIT> blocks as this works with string eval and
 C<require> aswell. Only one callback per package is allowed.
 
+=head1 5.10 Changes
+
+Since Perl 5.10 there are no op_seqmax and op_seq numbers in CORE
+anymore, so we add a package global op_seqmax for the op-tree
+numbering, for $B::OP::seq also. This is not thread-safe.
+
 =head1 AUTHOR
 
-Simon Cozens, C<simon@cpan.org>
+  Simon Cozens, C<simon@cpan.org>
 
-Extended functionality and current maintainer.
+Extended functionality and current maintainer:
 
-Arthur Bergman, C<abergman@cpan.org>
+  Arthur Bergman, C<abergman@cpan.org>
+
+5.10 support by Reini Urban:
+
+  Reini Urban, C<rurban@cpan.org>
 
 =head1 SEE ALSO
 

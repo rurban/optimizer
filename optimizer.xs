@@ -10,11 +10,22 @@
 #define PL_opargs (get_opargs())
 #endif
 
-typedef enum { OPc_NULL, OPc_BASEOP, OPc_UNOP, OPc_BINOP, OPc_LOGOP, OPc_LISTOP, 
+/* For 5.10 we have to provide some fake op_seq and op_seqmax places.
+ * op_seq can be stored in the B::OP class (really?), op_seqmax can be a package global.
+ */
+#if PERL_VERSION > 9
+U16     opt_op_seqmax = 0;
+#define PL_op_seqmax opt_op_seqmax
+#define op_seq_inc_max(o) 		sv_setiv(get_sv("optimize::seq", 1), PL_op_seqmax++)
+#else
+#define op_seq_inc_max(o) 		o->op_seq = PL_op_seqmax++
+#endif
+
+typedef enum { OPc_NULL, OPc_BASEOP, OPc_UNOP, OPc_BINOP, OPc_LOGOP, OPc_LISTOP,
     OPc_PMOP, OPc_SVOP, OPc_PADOP, OPc_PVOP, OPc_CVOP, OPc_LOOP, OPc_COP } opclass;
 
 static char *opclassnames[] = {
-    "B::NULL", "B::OP", "B::UNOP", "B::BINOP", "B::LOGOP", "B::LISTOP", 
+    "B::NULL", "B::OP", "B::UNOP", "B::BINOP", "B::LOGOP", "B::LISTOP",
     "B::PMOP", "B::SVOP", "B::PADOP", "B::PVOP", "B::CVOP", "B::LOOP", "B::COP"
 };
 
@@ -54,7 +65,7 @@ cc_opclass(pTHX_ OP *o)
     case OA_UNOP:   return OPc_UNOP;
     case OA_BINOP:  return OPc_BINOP;
     case OA_LOGOP:  return OPc_LOGOP;
-    case OA_LISTOP: return OPc_LISTOP; 
+    case OA_LISTOP: return OPc_LISTOP;
     case OA_PMOP:   return OPc_PMOP;
     case OA_SVOP:   return OPc_SVOP;
     case OA_PADOP:  return OPc_PADOP;
@@ -199,8 +210,6 @@ c_extend_peep(pTHX_ register OP *o)
 #if PERL_VERSION < 10
 	if (o->op_seq)
 	    break;
-	if (!PL_op_seqmax)
-	    PL_op_seqmax++;
 #else
 	if (o->op_opt)
 	    break;
@@ -208,6 +217,8 @@ c_extend_peep(pTHX_ register OP *o)
 	   clear this again.  */
 	o->op_opt = 1;
 #endif
+	if (!PL_op_seqmax)
+	    PL_op_seqmax++;
 	PL_op = o;
 	switch (o->op_type) {
 #if PERL_VERSION < 11
@@ -216,9 +227,7 @@ c_extend_peep(pTHX_ register OP *o)
 	case OP_NEXTSTATE:
 	case OP_DBSTATE:
 	    PL_curcop = ((COP*)o);		/* for warnings */
-#if PERL_VERSION < 10
-	    o->op_seq = PL_op_seqmax++;
-#endif
+	    op_seq_inc_max(o);
 	    break;
 
 	case OP_CONST:
@@ -248,9 +257,7 @@ c_extend_peep(pTHX_ register OP *o)
 		o->op_targ = ix;
 	    }
 #endif
-#if PERL_VERSION < 10
-	    o->op_seq = PL_op_seqmax++;
-#endif
+	    op_seq_inc_max(o);
 	    break;
 
 	case OP_CONCAT:
@@ -268,15 +275,11 @@ c_extend_peep(pTHX_ register OP *o)
 		op_null(o->op_next);
 	    }
 	  ignore_optimization:
-#if PERL_VERSION < 10
-	    o->op_seq = PL_op_seqmax++;
-#endif
+	    op_seq_inc_max(o);
 	    break;
 	case OP_STUB:
 	    if ((o->op_flags & OPf_WANT) != OPf_WANT_LIST) {
-#if PERL_VERSION < 10
-		o->op_seq = PL_op_seqmax++;
-#endif
+		op_seq_inc_max(o);
 		break; /* Scalar stub must produce undef.  List stub is noop */
 	    }
 	    goto nothin;
@@ -307,9 +310,7 @@ c_extend_peep(pTHX_ register OP *o)
 		oldop->op_next = o->op_next;
 		continue;
 	    }
-#if PERL_VERSION < 10
-	    o->op_seq = PL_op_seqmax++;
-#endif
+	    op_seq_inc_max(o);
 	    break;
 
 	case OP_PADAV:
@@ -323,7 +324,7 @@ c_extend_peep(pTHX_ register OP *o)
 		    pop->op_next->op_type == OP_AELEM &&
 		    !(pop->op_next->op_private &
 		      (OPpLVAL_INTRO|OPpLVAL_DEFER|OPpDEREF|OPpMAYBE_LVSUB)) &&
-		    (i = SvIV(((SVOP*)pop)->op_sv) - 
+		    (i = SvIV(((SVOP*)pop)->op_sv) -
 #if PERL_VERSION < 10
 		     	PL_curcop->cop_arybase
 #else
@@ -389,9 +390,7 @@ c_extend_peep(pTHX_ register OP *o)
 		op_null(o->op_next);
 	    }
 
-#if PERL_VERSION < 10
-	    o->op_seq = PL_op_seqmax++;
-#endif
+	    op_seq_inc_max(o);
 	    break;
 
 	case OP_MAPWHILE:
@@ -407,9 +406,7 @@ c_extend_peep(pTHX_ register OP *o)
 	case OP_DORASSIGN:
 	case OP_ONCE:
 #endif
-#if PERL_VERSION < 10
-	    o->op_seq = PL_op_seqmax++;
-#endif
+	    op_seq_inc_max(o);
 	    while (cLOGOP->op_other->op_type == OP_NULL)
 		cLOGOP->op_other = cLOGOP->op_other->op_next;
 	    c_extend_peep(aTHX_ cLOGOP->op_other); /* Recursive calls are not replaced by fptr calls */
@@ -417,9 +414,7 @@ c_extend_peep(pTHX_ register OP *o)
 
 	case OP_ENTERLOOP:
 	case OP_ENTERITER:
-#if PERL_VERSION < 10
-	    o->op_seq = PL_op_seqmax++;
-#endif
+	    op_seq_inc_max(o);
 	    while (cLOOP->op_redoop->op_type == OP_NULL)
 		cLOOP->op_redoop = cLOOP->op_redoop->op_next;
 	    c_extend_peep(aTHX_ cLOOP->op_redoop);
@@ -435,8 +430,8 @@ c_extend_peep(pTHX_ register OP *o)
 	case OP_MATCH:
 #if PERL_VERSION < 10
 	case OP_SUBST:
-	    o->op_seq = PL_op_seqmax++;
 #endif
+	    op_seq_inc_max(o);
 #if PERL_VERSION < 10
 	    while (cPMOP->op_pmreplstart &&
 		   cPMOP->op_pmreplstart->op_type == OP_NULL)
@@ -461,9 +456,7 @@ c_extend_peep(pTHX_ register OP *o)
 #endif
 
 	case OP_EXEC:
-#if PERL_VERSION < 10
-	    o->op_seq = PL_op_seqmax++;
-#endif
+	    op_seq_inc_max(o);
 	    if (ckWARN(WARN_SYNTAX) && o->op_next
 		&& o->op_next->op_type == OP_NEXTSTATE) {
 		if (o->op_next->op_sibling) {
@@ -490,9 +483,7 @@ c_extend_peep(pTHX_ register OP *o)
 	    char *key = NULL;
 	    STRLEN keylen;
 
-#if PERL_VERSION < 10
-	    o->op_seq = PL_op_seqmax++;
-#endif
+	    op_seq_inc_max(o);
 
 	    if (((BINOP*)o)->op_last->op_type != OP_CONST)
 		break;
@@ -528,8 +519,8 @@ c_extend_peep(pTHX_ register OP *o)
 		Perl_croak(aTHX_ "No such pseudo-hash field \"%s\" in variable %s of type %s",
 		      key, SvPV(lexname, n_a), HvNAME(SvSTASH(lexname)));
 #else
-		Perl_croak(aTHX_ "No such class field \"%s\" " 
-			   "in variable %s of type %s", 
+		Perl_croak(aTHX_ "No such class field \"%s\" "
+			   "in variable %s of type %s",
 		      key, SvPV_nolen_const(lexname), HvNAME_get(SvSTASH(lexname)));
 #endif
 	    }
@@ -563,9 +554,7 @@ c_extend_peep(pTHX_ register OP *o)
 	    STRLEN keylen;
 	    SVOP *first_key_op, *key_op;
 
-#if PERL_VERSION < 10
-	    o->op_seq = PL_op_seqmax++;
-#endif
+	    op_seq_inc_max(o);
 	    if ((o->op_private & (OPpLVAL_INTRO))
 		/* I bet there's always a pushmark... */
 		|| ((LISTOP*)o)->op_first->op_sibling->op_type != OP_LIST)
@@ -579,7 +568,7 @@ c_extend_peep(pTHX_ register OP *o)
 		rop = (UNOP*)rop->op_first;
 	    else {
 		/* @{$hash}{qw(keys here)} */
-		if (rop->op_first->op_type == OP_SCOPE 
+		if (rop->op_first->op_type == OP_SCOPE
 		    && cLISTOPx(rop->op_first)->op_last->op_type == OP_PADSV)
 		{
 		    rop = (UNOP*)cLISTOPx(rop->op_first)->op_last;
@@ -793,7 +782,7 @@ c_extend_peep(pTHX_ register OP *o)
 	    iter = enter->op_next;
 	    if (!iter || iter->op_type != OP_ITER)
 		break;
-	    
+	
 	    expushmark = enter->op_first;
 	    if (!expushmark || expushmark->op_type != OP_NULL
 		|| expushmark->op_targ != OP_PUSHMARK)
@@ -845,7 +834,7 @@ c_extend_peep(pTHX_ register OP *o)
 	    op_null(o);
 	    enter->op_private |= OPpITER_REVERSED;
 	    iter->op_private |= OPpITER_REVERSED;
-	    
+	
 	    break;
 	}
 
@@ -882,11 +871,11 @@ c_extend_peep(pTHX_ register OP *o)
 	    if (rv2cv->op_type != OP_RV2CV)
 		break;
 
+#if PERL_VERSION >= 10
 	    assert ((rv2gv->op_private & OPpDONT_INIT_GV) == 0);
 	    assert ((o->op_private & OPpASSIGN_CV_TO_GV) == 0);
 	    assert ((rv2cv->op_private & OPpMAY_RETURN_CONSTANT) == 0);
 
-#if PERL_VERSION >= 10
 	    o->op_private |= OPpASSIGN_CV_TO_GV;
 	    rv2gv->op_private |= OPpDONT_INIT_GV;
 	    rv2cv->op_private |= OPpMAY_RETURN_CONSTANT;
@@ -895,9 +884,7 @@ c_extend_peep(pTHX_ register OP *o)
 	}
 
 	default:
-#if PERL_VERSION < 10
-	    o->op_seq = PL_op_seqmax++;
-#endif
+	    op_seq_inc_max(o);
 	    break;
 	}
 	peep_callback(aTHX_ o);
@@ -913,17 +900,17 @@ c_sub_detect(pTHX_ register OP *o)
   /* Here we call the perl peep function so we don't get bit by
      by the fact that doing stuff while optimization is highly dangerous
   */
-    
+
   Perl_peep(aTHX_ o);
-    
+
   /* Since we get the start here, we should try and find the
      leave by following next until we find it
   */
 
   while(o) {
-    if(o->op_next) 
+    if(o->op_next)
       o = o->op_next;
-    else 
+    else
       break;
   }
   if(!o)
@@ -939,15 +926,10 @@ c_sub_detect(pTHX_ register OP *o)
       peep_in_perl = HeVAL(entry);
       peep_callback(aTHX_ o);	
     }
-    
-    
 
   }
 
 }
-
-
-
 
 /* This trick stolen from B.xs */
 #define PEEP_op_seqmax() PL_op_seqmax
@@ -957,21 +939,9 @@ MODULE = optimizer		PACKAGE = optimizer		PREFIX = PEEP_
 
 U32
 PEEP_op_seqmax()
-    CODE:
-#if PERL_VERSION < 10
-    RETVAL = PL_op_seqmax;
-#else
-    Perl_croak(aTHX_ "op_seqmax deprecated");
-#endif
 
 U32
 PEEP_op_seqmax_inc()
-    CODE:
-#if PERL_VERSION < 10
-    RETVAL = PL_op_seqmax++;
-#else
-    Perl_croak(aTHX_ "op_seqmax_inc deprecated");
-#endif
 
 void
 PEEP_c_extend_install(SV* subref)
