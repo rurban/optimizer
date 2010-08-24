@@ -192,6 +192,15 @@ no_bareword_allowed(pTHX_ OP *o)
 		     SvPV_nolen(cSVOPo_sv)));
 }
 
+/* stolen from ext/B/B.xs */
+#if PERL_VERSION >= 9
+#  define PMOP_pmreplstart(o)   o->op_pmstashstartu.op_pmreplstart
+#else
+#  define PMOP_pmreplstart(o)   o->op_pmreplstart
+#  define PMOP_pmpermflags(o)   o->op_pmpermflags
+#  define PMOP_pmdynflags(o)    o->op_pmdynflags
+#endif
+
 void
 c_extend_peep(pTHX_ register OP *o)
 {
@@ -320,7 +329,7 @@ c_extend_peep(pTHX_ register OP *o)
 			    o->op_next : o->op_next->op_next;
 		IV i;
 		if (pop && pop->op_type == OP_CONST &&
-		    ((PL_op = pop->op_next)) &&
+		    (PL_op = pop->op_next) &&
 		    pop->op_next->op_type == OP_AELEM &&
 		    !(pop->op_next->op_private &
 		      (OPpLVAL_INTRO|OPpLVAL_DEFER|OPpDEREF|OPpMAYBE_LVSUB)) &&
@@ -372,7 +381,7 @@ c_extend_peep(pTHX_ register OP *o)
 		if (SvTYPE(gv) == SVt_PVGV && GvCV(gv) && SvPVX(GvCV(gv))) {
 		    /* XXX could check prototype here instead of just carping */
 		    SV *sv = sv_newmortal();
-		    gv_efullname3(sv, gv, NULL);
+		    gv_efullname3(sv, gv, Nullch);
 		    Perl_warner(aTHX_ packWARN(WARN_PROTOTYPE),
 				"%s() called too early to check prototype",
 				SvPV_nolen(sv));
@@ -428,32 +437,18 @@ c_extend_peep(pTHX_ register OP *o)
 
 	case OP_QR:
 	case OP_MATCH:
-#if PERL_VERSION < 10
 	case OP_SUBST:
-#endif
 	    op_seq_inc_max(o);
-#if PERL_VERSION < 10
-	    while (cPMOP->op_pmreplstart &&
-		   cPMOP->op_pmreplstart->op_type == OP_NULL)
-		cPMOP->op_pmreplstart = cPMOP->op_pmreplstart->op_next;
-	    c_extend_peep(aTHX_ cPMOP->op_pmreplstart);
-#else
+	    while (PMOP_pmreplstart(cPMOPo) &&
+		   PMOP_pmreplstart(cPMOPo)->op_type == OP_NULL)
+	      PMOP_pmreplstart(cPMOPo) = PMOP_pmreplstart(cPMOPo)->op_next;
+	    c_extend_peep(aTHX_ PMOP_pmreplstart(cPMOPo));
+#if PERL_VERSION >= 10
 	    if (!(cPMOP->op_pmflags & PMf_ONCE)) {
-		assert (!cPMOP->op_pmstashstartu.op_pmreplstart);
+	      assert (!PMOP_pmreplstart(cPMOP));
 	    }
 #endif
 	    break;
-
-#if PERL_VERSION >= 10
-	case OP_SUBST:
-	    assert(!(cPMOP->op_pmflags & PMf_ONCE));
-	    while (cPMOP->op_pmstashstartu.op_pmreplstart &&
-		   cPMOP->op_pmstashstartu.op_pmreplstart->op_type == OP_NULL)
-		cPMOP->op_pmstashstartu.op_pmreplstart
-		    = cPMOP->op_pmstashstartu.op_pmreplstart->op_next;
-	    c_extend_peep(aTHX_ cPMOP->op_pmstashstartu.op_pmreplstart);
-	    break;
-#endif
 
 	case OP_EXEC:
 	    op_seq_inc_max(o);
@@ -550,7 +545,7 @@ c_extend_peep(pTHX_ register OP *o)
 	    GV **fields;
 	    SV **svp, **indsvp, *sv;
 	    I32 ind;
-	    char *key;
+	    const char *key;
 	    STRLEN keylen;
 	    SVOP *first_key_op, *key_op;
 
@@ -617,8 +612,13 @@ c_extend_peep(pTHX_ register OP *o)
 		sv = newSViv(ind);
 		if (SvREADONLY(*svp))
 		    SvREADONLY_on(sv);
+#  if PERL_VERSION > 8
+		SvFLAGS(sv) |= (SvFLAGS(*svp)
+				& (SVs_PADSTALE|SVs_PADTMP|SVs_PADMY));
+#  else
 		SvFLAGS(sv) |= (SvFLAGS(*svp)
 				& (SVs_PADBUSY|SVs_PADTMP|SVs_PADMY));
+#  endif
 		SvREFCNT_dec(*svp);
 		*svp = sv;
 #else
@@ -937,6 +937,8 @@ c_sub_detect(pTHX_ register OP *o)
 
 MODULE = optimizer		PACKAGE = optimizer		PREFIX = PEEP_
 
+PROTOTYPES: DISABLE
+
 U32
 PEEP_op_seqmax()
 
@@ -969,5 +971,5 @@ PEEP_relocatetopad(o,sv)
     B::OP  o
     SV*  sv
     CODE:
-        sv = (SV*) SvIV(SvRV(sv));
-        relocatetopad(aTHX_ o,(CV*)sv);
+    sv = INT2PTR(SV*,SvIV(SvRV(sv)));
+    relocatetopad(aTHX_ o,(CV*)sv);

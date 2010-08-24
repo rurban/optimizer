@@ -75,9 +75,9 @@ DESCRIPTION
 AUTHOR
     Simon Cozens, "simon@cpan.org"
 
-    Extended functionality and current maintainer.
-
+    Extended functionality:
     Arthur Bergman, "abergman@cpan.org"
+    Reini Urban, "rurban@cpan.org"
 
 SEE ALSO
     B::Generate, optimize

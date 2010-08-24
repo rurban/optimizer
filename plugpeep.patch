@@ -1,3 +1,5 @@
+Only needed < 5.8
+
 --- thrdvar.h~	Sat Jul 28 11:21:46 2001
 +++ thrdvar.h	Sat Jul 28 11:33:34 2001
 @@ -211,6 +211,8 @@

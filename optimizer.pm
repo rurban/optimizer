@@ -23,7 +23,7 @@ BEGIN {
 }
 
 require DynaLoader;
-our $VERSION = '0.06';
+our $VERSION = '0.06_03';
 our @ISA=q(DynaLoader);
 our %callbacks;
 bootstrap optimizer $VERSION;
@@ -169,7 +169,6 @@ sub peepextend {
 
 1;
 __END__
-# Below is stub documentation for your module. You better edit it!
 
 =head1 NAME
 
@@ -247,6 +246,10 @@ use the standard one. The op tree you are handed is also stable so you
 are free to work on it. This is usefull if you are limited by
 C<CHECK> and C<INIT> blocks as this works with string eval and
 C<require> aswell. Only one callback per package is allowed.
+
+=head1 STATUS
+
+relocatetopad() fails with threaded perls.
 
 =head1 5.10 Changes
 
