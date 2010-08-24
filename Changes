@@ -13,23 +13,23 @@ Revision history for Perl extension optimizer.
 	- added eg/pad.pl
 	- added t/04-use.t
 
-0.05  Mon Dec 30 09:45:09 CET 2002
+0.05  Mon Dec 30 09:45:09 CET 2002 Artur Bergman
 	- Applied patch from greg that removes debugging prints
 	  [rt.cpan.org 1475] http://rt.cpan.org/NoAuth/Bug.html?id=1475
 
-0.04  Sun Dec 29 17:29:05 CET 2002
+0.04  Sun Dec 29 17:29:05 CET 2002 Artur Bergman
 	- Add support for multiple 'sub-detect' callbacks
 
-0.03  Sat Dec 28 23:13:02 CET 2002
+0.03  Sat Dec 28 23:13:02 CET 2002 Artur Bergman
         - Added support for use optimizer 'sub-detect', which
 	  callbacks on every code block it finds after that
 	  block has been compiled.
 
-0.02  Wed Jun 26 19:44:29 CEST 2002
+0.02  Wed Jun 26 19:44:29 CEST 2002 Artur Bergman
 	- Added support use optimizer 'extend-c', which extends
 	  perls default C based optimizer.
 
-0.01  Sat Jul 28 13:55:06 2001
+0.01  Sat Jul 28 13:55:06 2001 Simon Cozens
 	- original version; created by h2xs 1.21 with options
 		-A -n optimizer
 
