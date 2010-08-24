@@ -23,7 +23,7 @@ BEGIN {
 }
 
 require DynaLoader;
-our $VERSION = '0.06_03';
+our $VERSION = '0.06_04';
 our @ISA=q(DynaLoader);
 our %callbacks;
 bootstrap optimizer $VERSION;
@@ -190,7 +190,7 @@ optimizer - Write your own Perl optimizer, in Perl
   # Use a simple optimizer with callbacks for each op
   use optimizer callback => sub { .. }
 
-  # Completely implement your own optimizre
+  # Completely implement your own optimizer
   use optimizer mine => sub { ... }
 
   # use the standard optimizer with an extra callback
@@ -208,12 +208,11 @@ optimizer - Write your own Perl optimizer, in Perl
 This module allows you to replace the default Perl optree
 optimizer, C<peep>, with a Perl function of your own devising.
 
-It requires a Perl patched with the patch supplied with the
-module distribution; this patch allows the optimizer to be
+It requires a Perl > 5.8 or patched with the plugpeep patch supplied
+with the module distribution; this patch allows the optimizer to be
 pluggable and replaceable with a C function pointer. This module
-provides the glue between the C function and a Perl subroutine. It
-is hoped that the patch will be integrated into the Perl core at
-some point soon. This patch is integrated as of perl 5.8.
+provides the glue between the C function and a Perl subroutine.
+This patch was integrated as of perl 5.8.
 
 Your optimizer subroutine will be handed a C<B::OP>-derived object
 representing the first (NOT the root) op in the program. You are
@@ -243,13 +242,107 @@ code block is compiled so you can do any arbitrary work on it use the
 C<sub-detect> option, you will be passed LEAVE* ops after the standard
 peep optimizer has been run, this minimises the risk for bugs as we
 use the standard one. The op tree you are handed is also stable so you
-are free to work on it. This is usefull if you are limited by
+are free to work on it. This is useful if you are limited by
 C<CHECK> and C<INIT> blocks as this works with string eval and
 C<require> aswell. Only one callback per package is allowed.
 
+=head1 OPTIONS
+
+=over 4
+
+=item C
+
+Use Perl's default optimizer.
+
+  use optimizer 'C';
+
+=item perl
+
+Use a Perl implementation of Perl's default optimizer.
+
+  use optimizer 'perl';
+
+=item extend
+
+Use an extension of the default optimizer.
+The callback is called for every visited op.
+
+  use optimizer extend => sub {
+        warn "goto considered harmful" if $_[0]->name eq "goto"
+  }
+
+=item callback
+
+Use a simple optimizer with callbacks for each op.
+
+  use optimizer callback => sub { .. }
+
+=item mine
+
+Completely implement your own optimizer. You have to provide your own walker and peep.
+
+  use optimizer mine => sub { ... }
+
+=item extend-c
+
+Use the standard optimizer with an extra callback.
+This is the most compatible optimizer version.
+
+  use optimizer 'extend-c' => sub { print $_[0]->name() };
+
+=item sub-detect
+
+Don't provide a peep optimizer, rather get a callback
+after we are finished with every code block (I<sub>).
+You will be passed LEAVE* ops after the standard
+peep optimizer has been run, this minimises the risk
+for bugs as we use the standard one.
+
+  use optimizer 'sub-detect' => sub { print $_[0]->name() };
+
+=back
+
+=head1 HELPER FUNCTIONS
+
+=over 4
+
+=item callbackoptimizer (this, callback)
+
+The helper function for the option B<callback>.
+
+=item peepextend (this, callback)
+
+The helper function for the option B<extend>.
+
+->import('perl') uses B<peepextend> with an empty callback.
+
+=item c_extend_install
+
+The helper function for the option B<extend-c>.
+It uses the longish XS function C<c_extend_peep> as
+experimental peeper, and calls the user-side perl callback
+for each OP.
+
+=item c_sub_detect_install
+
+The XS helper function for the option B<sub-detect>.
+It installs C<c_sub_detect> as C<PL_peep>.
+B<c_sub_detect> calls all perl-side callbacks at any LEAVE op.
+
+=item relocatetopad
+
+For thread-safety we need to move a SV to a PAD.
+
+=item unimport
+
+Override with an empty B<callbackoptimizer>, effectively disabling any
+installed optimizer.
+
+=back
+
 =head1 STATUS
 
-relocatetopad() fails with threaded perls.
+relocatetopad fails with threaded perls.
 
 =head1 5.10 Changes
 

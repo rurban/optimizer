@@ -1,5 +1,10 @@
 Revision history for Perl extension optimizer.
 
+0.06_04  2010-08-24 Reini Urban <rurban@cpan.org>
+	- added pod documentation
+	- fix z_ tests
+	- fix MANIFEST
+
 0.06_03  2010-08-24 Reini Urban <rurban@cpan.org>
 	all tests pass but 04-use.t 7+8 with threads in relocatetopad
 	- fix compiler warnings

@@ -1,15 +1,26 @@
 --- #YAML:1.0
-name:                optimizer
-version:             0.06
-abstract:            Write your own Perl optimizer, in Perl
-license:             ~
-author:              
-    - Arthur Bergman <abergman@cpan.org>
-generated_by:        ExtUtils::MakeMaker version 6.44
-distribution_type:   module
-requires:     
-    B::Generate:                   0
-    DynaLoader:                    0
+name:               optimizer
+version:            0.06_03
+abstract:           Write your own Perl optimizer, in Perl
+author:
+    - Simon Cozens, Arthur Bergman, Reini Urban
+license:            unknown
+distribution_type:  module
+configure_requires:
+    ExtUtils::MakeMaker:  0
+build_requires:
+    ExtUtils::MakeMaker:  0
+requires:
+    B::Generate:  0
+    DynaLoader:   0
+resources:
+    license:     http://dev.perl.org/licenses/
+    repository:  http://github.com/rurban/optimizer
+no_index:
+    directory:
+        - t
+        - inc
+generated_by:       ExtUtils::MakeMaker version 6.5601
 meta-spec:
-    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
-    version: 1.3
+    url:      http://module-build.sourceforge.net/META-spec-v1.4.html
+    version:  1.4

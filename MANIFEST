@@ -1,4 +1,5 @@
 Changes
+eg/and_not.pl
 eg/pad.pl
 Makefile.PL
 MANIFEST
@@ -10,5 +11,9 @@ t/01.t
 t/02-sub_detect.t
 t/03-multi_sub_detect.t
 t/04-use.t
+t/z_kwalitee.t
+t/z_meta.t
+t/z_pod-coverage.t
+t/z_pod.t
 typemap
 META.yml                                 Module meta-data (added by MakeMaker)

@@ -3,10 +3,10 @@ NAME
 
 SYNOPSIS
       # Use Perl's default optimizer
-      use optimizer 'C'; 
+      use optimizer 'C';
 
       # Use a Perl implementation of the default optimizer
-      use optimizer 'perl'; 
+      use optimizer 'perl';
 
       # Use an extension of the default optimizer
       use optimizer extend => sub {
@@ -21,11 +21,11 @@ SYNOPSIS
 
       # use the standard optimizer with an extra callback
       # this is the most compatible optimizer version
-      use optimizer extend-c => sub { print $_[0]->name() };
+      use optimizer 'extend-c' => sub { print $_[0]->name() };
 
       # don't provide a peep optimizer, rather get a callback
       # after we are finished with every code block
-      use optimizer sub-detect => sub { print $_[0]->name() };
+      use optimizer 'sub-detect' => sub { print $_[0]->name() };
 
       no optimizer; # Use the simplest working optimizer
 
@@ -56,7 +56,7 @@ DESCRIPTION
 
             ... more optimizations ...
 
-            $op = $op->next; 
+            $op = $op->next;
             last unless $op->can("next"); # Shouldn't get here
         }
 
@@ -72,12 +72,24 @@ DESCRIPTION
     "INIT" blocks as this works with string eval and "require" aswell. Only
     one callback per package is allowed.
 
-AUTHOR
-    Simon Cozens, "simon@cpan.org"
+STATUS
+    relocatetopad() fails with threaded perls.
 
-    Extended functionality:
-    Arthur Bergman, "abergman@cpan.org"
-    Reini Urban, "rurban@cpan.org"
+5.10 Changes
+    Since Perl 5.10 there are no op_seqmax and op_seq numbers in CORE
+    anymore, so we add a package global op_seqmax for the op-tree numbering,
+    for $B::OP::seq also. This is not thread-safe.
+
+AUTHOR
+      Simon Cozens, C<simon@cpan.org>
+
+    Extended functionality and current maintainer:
+
+      Arthur Bergman, C<abergman@cpan.org>
+
+    5.10 support by Reini Urban:
+
+      Reini Urban, C<rurban@cpan.org>
 
 SEE ALSO
     B::Generate, optimize
