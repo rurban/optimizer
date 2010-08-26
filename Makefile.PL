@@ -7,7 +7,7 @@ WriteMakefile
    'PREREQ_PM'	=>
    {
     'DynaLoader'  => 0,
-    'B::Generate' => 0
+    'B::Generate' => '1.26'
    },
    ABSTRACT_FROM => 'optimizer.pm',
    AUTHOR        => 'Simon Cozens, Arthur Bergman, Reini Urban',
