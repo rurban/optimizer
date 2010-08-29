@@ -23,4 +23,12 @@ WriteMakefile
     ) : ()),
   );
 
-sub MY::depend { "README : optimizer.pm\n\tpod2text optimizer.pm > README\n"; }
+package MY;
+
+sub depend { "README : optimizer.pm\n\tpod2text optimizer.pm > README\n"; }
+
+sub test {
+  local $_ = shift->SUPER::test(@_);
+  s/PERL_DL_NONLAZY=1 //g;
+  return $_;
+}

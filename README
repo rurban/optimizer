@@ -16,7 +16,7 @@ SYNOPSIS
       # Use a simple optimizer with callbacks for each op
       use optimizer callback => sub { .. }
 
-      # Completely implement your own optimizre
+      # Completely implement your own optimizer
       use optimizer mine => sub { ... }
 
       # use the standard optimizer with an extra callback

@@ -1,5 +1,10 @@
 Revision history for Perl extension optimizer.
 
+0.06_05  2010-08-28 Reini Urban <rurban@cpan.org>
+	- explain CPAN test failures with B::Generate and PERL_DL_NONLAZY=1
+	  If you want it, use it without PERL_DL_NONLAZY being set.
+	- remove PERL_DL_NONLAZY=1 from our tests.
+
 0.06_04  2010-08-24 Reini Urban <rurban@cpan.org>
 	- added pod documentation
 	- fix z_ tests

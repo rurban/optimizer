@@ -23,7 +23,7 @@ BEGIN {
 }
 
 require DynaLoader;
-our $VERSION = '0.06_04';
+our $VERSION = '0.06_05';
 our @ISA=q(DynaLoader);
 our %callbacks;
 bootstrap optimizer $VERSION;
@@ -245,6 +245,18 @@ use the standard one. The op tree you are handed is also stable so you
 are free to work on it. This is useful if you are limited by
 C<CHECK> and C<INIT> blocks as this works with string eval and
 C<require> aswell. Only one callback per package is allowed.
+
+PERL_DL_NONLAZY and B::Generate
+
+Note that optimizer do works fine on most platforms and perl versions,
+only on Windows some libperl functions are not exported anymore, which
+B::Generate needs.
+Recently ExtUtils::MakeMaker was changed to add PERL_DL_NONLAZY=1
+for our tests, so B::Generate cannot be loaded anymore, because this needs
+three recently removed libperl functions, which cannot be detected at run-time
+only at compile-time, so we get false UNKNOWN report for optimizer.
+optimizer is doing fine, B::Generate was crippled.
+If you want it, test and use it without PERL_DL_NONLAZY=1.
 
 =head1 OPTIONS
 
