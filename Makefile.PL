@@ -17,7 +17,7 @@ WriteMakefile
       resources =>
       {
        license     => 'http://dev.perl.org/licenses/',
-       repository  => 'http://github.com/rurban/optimizer',
+       repository  => 'http://github.com/rurban/optimizer.git',
       },
      }
     ) : ()),
