@@ -5,8 +5,8 @@ package
 
 =head1 DESCRIPTION
 
-optimize (and ... NO) to null if no gvsv/padsv, else (dor $x) or do some SvGETMAGIC
-(and NO) is always false, but all SVs must call their mg_get for all SVs before not
+optimize (and ... NO) to null if no gvsv/padsv, else (dor $x) or do some SvGETMAGIC.
+(and NO) is always false, but all SVs must call their mg_get for all SVs before not.
 
 =head1 EXAMPLE1 gvsv
 
@@ -71,7 +71,7 @@ is already optimized to
 
 =cut
 
-#use B::Generate;
+use B::Generate;
 use optimizer callback => sub {
   my $o	= shift;
   if (($o->name eq 'gvsv' or $o->name eq 'padsv')
