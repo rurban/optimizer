@@ -445,9 +445,9 @@ c_extend_peep(pTHX_ register OP *o)
 	      PMOP_pmreplstart(cPMOPo) = PMOP_pmreplstart(cPMOPo)->op_next;
 	    c_extend_peep(aTHX_ PMOP_pmreplstart(cPMOPo));
 #if PERL_VERSION >= 10
-	    if (!(cPMOP->op_pmflags & PMf_ONCE)) {
-	      assert (!PMOP_pmreplstart(cPMOP));
-	    }
+	    //if (!(cPMOP->op_pmflags & PMf_ONCE)) {
+	    //  assert (!PMOP_pmreplstart(cPMOP));
+	    //}
 #endif
 	    break;
 

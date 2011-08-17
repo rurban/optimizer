@@ -13,12 +13,12 @@ BEGIN {
   my $seq = 0;
   if ($] > 5.009) {
     eval q(
-    package B::OP;
-    sub seq {
-      my $self = shift;
-      @_ ? $optimizer::seq = shift : $optimizer::seq;
-    }
-   );
+      package B::OP;
+      sub seq {
+        shift;
+        @_ ? $optimizer::seq = shift : $optimizer::seq;
+      }
+    );
   }
 }
 
@@ -217,7 +217,7 @@ This patch was integrated as of perl 5.8.
 Your optimizer subroutine will be handed a C<B::OP>-derived object
 representing the first (NOT the root) op in the program. You are
 expected to be fluent with the C<B> module to know what to do with this.
-You can use C<B::Generate> to fiddle around with the optree you are
+You can use L<B::Generate> to fiddle around with the optree you are
 given, while traversing it in execution order.
 
 If you choose complete control over your optimizer, you B<must> assign
@@ -251,12 +251,6 @@ PERL_DL_NONLAZY and B::Generate
 Note that optimizer do works fine on most platforms and perl versions,
 only on Windows some libperl functions are not exported anymore, which
 B::Generate needs.
-Recently ExtUtils::MakeMaker was changed to add PERL_DL_NONLAZY=1
-for our tests, so B::Generate cannot be loaded anymore, because this needs
-three recently removed libperl functions, which cannot be detected at run-time
-only at compile-time, so we get false UNKNOWN report for optimizer.
-optimizer is doing fine, B::Generate was crippled.
-If you want it, test and use it without PERL_DL_NONLAZY=1.
 
 =head1 OPTIONS
 
