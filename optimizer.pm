@@ -360,11 +360,11 @@ numbering, for $B::OP::seq also. This is not thread-safe.
 
   Simon Cozens, C<simon@cpan.org>
 
-Extended functionality and current maintainer:
+Extended functionality:
 
   Arthur Bergman, C<abergman@cpan.org>
 
-5.10 support by Reini Urban:
+5.10 support and current maintainer Reini Urban:
 
   Reini Urban, C<rurban@cpan.org>
 
