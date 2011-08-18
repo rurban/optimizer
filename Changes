@@ -1,5 +1,8 @@
 Revision history for Perl extension optimizer.
 
+0.06_07  2011-08-18 Reini Urban <rurban@cpan.org>
+        - fix Artur's name
+
 0.06_06  2011-08-17 Reini Urban <rurban@cpan.org>
         - t/04-use.t: 7-8 fail threaded at pad_alloc (TODO)
 

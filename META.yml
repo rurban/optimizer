@@ -3,7 +3,7 @@ name:               optimizer
 version:            0.06_03
 abstract:           Write your own Perl optimizer, in Perl
 author:
-    - Simon Cozens, Arthur Bergman, Reini Urban
+    - Simon Cozens, Artur Bergman, Reini Urban
 license:            unknown
 distribution_type:  module
 configure_requires:

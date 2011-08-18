@@ -23,7 +23,7 @@ BEGIN {
 }
 
 require DynaLoader;
-our $VERSION = '0.06_06';
+our $VERSION = '0.06_07';
 our @ISA=q(DynaLoader);
 our %callbacks;
 bootstrap optimizer $VERSION;
@@ -362,7 +362,7 @@ numbering, for $B::OP::seq also. This is not thread-safe.
 
 Extended functionality:
 
-  Arthur Bergman, C<abergman@cpan.org>
+  Artur Bergman, C<abergman@cpan.org>
 
 5.10 support and current maintainer Reini Urban:
 

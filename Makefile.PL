@@ -10,7 +10,7 @@ WriteMakefile
     'B::Generate' => '1.26'
    },
    ABSTRACT_FROM => 'optimizer.pm',
-   AUTHOR        => 'Simon Cozens, Arthur Bergman, Reini Urban',
+   AUTHOR        => 'Simon Cozens, Artur Bergman, Reini Urban',
    ($ExtUtils::MakeMaker::VERSION gt '6.46' ?
     ('META_MERGE'  =>
      {
