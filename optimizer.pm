@@ -23,26 +23,26 @@ BEGIN {
 }
 
 require DynaLoader;
-our $VERSION = '0.06_07';
-our @ISA=q(DynaLoader);
+our $VERSION = '0.07';
+our @ISA = q(DynaLoader);
 our %callbacks;
 bootstrap optimizer $VERSION;
 
 my ($file, $line) = ("unknown", "unknown");
 
 {
-sub preparewarn {
+sub _preparewarn {
     my $args = join '', @_;
     $args = "Something's wrong " unless $args;
     $args .= " at $file line $line.\n" unless substr($args, length($args) -1) eq "\n";
 }
 
-sub update {
+sub _update {
     my $cop = shift; $file = $cop->file; $line = $cop->line;
 }
 
-sub die (@) { CORE::die(preparewarn(@_)) }
-sub warn (@) { CORE::warn(preparewarn(@_)) }
+sub _die (@) { CORE::die(preparewarn(@_)) }
+sub _warn (@) { CORE::warn(preparewarn(@_)) }
 }
 
 sub import {
@@ -58,7 +58,7 @@ sub import {
     } elsif ($type eq "callback" or $type eq "extend" or $type eq "mine") {
         my $subref = shift;
         croak "Supplied callback was not a subref" unless ref $subref eq "CODE";
-        optimizer::install( sub { callbackoptimizer($_[0],$subref) }) if $type eq "callback";
+        optimizer::install( sub { callbackoptimizer($_[0], $subref) }) if $type eq "callback";
         optimizer::install( sub { optimizer::peepextend($_[0], $subref) }) if $type eq "extend";
         optimizer::install( $subref ) if $type eq "mine";
     } elsif ($type eq 'extend-c') {
@@ -78,8 +78,9 @@ sub callbackoptimizer {
     my ($op, $callback) = @_;
     while ($$op) {
 	$op->seq(optimizer::op_seqmax_inc());
-        update($op) if $op->isa("B::COP");
-        relocatetopad($op, $op->find_cv()) if $op->name eq "const"; # For thread safety
+        _update($op) if $op->isa("B::COP");
+	# crashes: wrong op_sv, strange cv
+        #_relocatetopad($op, $op->find_cv()) if $op->name eq "const"; # For thread safety
 
         $callback->($op);
         $op = $op->next;
@@ -98,15 +99,14 @@ sub peepextend {
     while ($$o) {
         #warn ("Trying op $o ($$o) -> ".$o->name."\n");
         if ($o->isa("B::COP")) {
-
             $o->seq(optimizer::op_seqmax_inc());
-            update($o); # For warnings
+            _update($o); # For warnings
 
         } elsif ($o->name eq "const") {
-            optimizer::die("Bareword ",$o->sv->sv, " not allowed while \"strict subs\" in use")
+            optimizer::_die("Bareword ",$o->sv->sv, " not allowed while \"strict subs\" in use")
                 if ($o->private & 8);
-
-            relocatetopad($o,$o->find_cv());
+	    # crashes: wrong op_sv, strange cv
+            #_relocatetopad($o, $o->find_cv());
             $o->seq(optimizer::op_seqmax_inc());
         } elsif ($o->name eq "concat") {
             if ($o->next && $o->next->name eq "stringify" and !($o->flags &64)) {
@@ -134,7 +134,7 @@ sub peepextend {
             $o->seq(optimizer::op_seqmax_inc());
             $o->other($o->other->next) while $o->other->name eq "null";
             peepextend($o->other, $callback); # Weee.
-        } elsif ($o->name =~ /^enter(loop|iter)/) {
+        } elsif ($o->name =~ /^enter(loop|iter|given|when)/) {
             $o->seq(optimizer::op_seqmax_inc());
             $o->redoop($o->redoop->next) while $o->redoop->name eq "null";
 	    peepextend($o->redoop, $callback);
@@ -151,8 +151,8 @@ sub peepextend {
             $o->seq(optimizer::op_seqmax_inc());
             if (${$o->next} and $o->next->name eq "nextstate" and
                 ${$o->next->sibling} and $o->next->sibling->type !~ /exit|warn|die/) {
-                optimizer::warn("Statement unlikely to be reached");
-                optimizer::warn("\t(Maybe you meant system() when you said exec()?)\n");
+                optimizer::_warn("Statement unlikely to be reached");
+                optimizer::_warn("\t(Maybe you meant system() when you said exec()?)\n");
             }
         } else {
             # Screw pseudohashes.
@@ -334,10 +334,6 @@ for each OP.
 The XS helper function for the option B<sub-detect>.
 It installs C<c_sub_detect> as C<PL_peep>.
 B<c_sub_detect> calls all perl-side callbacks at any LEAVE op.
-
-=item relocatetopad
-
-For thread-safety we need to move a SV to a PAD.
 
 =item unimport
 

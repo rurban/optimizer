@@ -148,40 +148,40 @@ install(pTHX_ SV* subref)
 }
 
 static void
-relocatetopad(pTHX_ OP* op,CV* cv)
+_relocatetopad(pTHX_ OP* op, CV* cv)
 {
 #ifdef USE_ITHREADS
-        SV** tmp_pad;
-	AV* padlist;
-	SV** svp;
-	SVOP* o = (SVOP*)op;
-	padlist = CvPADLIST(cv);
-	svp = AvARRAY(padlist);
-        tmp_pad = PL_curpad;
-	PL_curpad = AvARRAY((AV*)svp[1]);
-        /* Relocate sv to the pad for thread safety.
-         * Despite being a "constant", the SV is written to,
-         * for reference counts, sv_upgrade() etc. */
-        if (o->op_sv) {
-            PADOFFSET ix = Perl_pad_alloc(aTHX_ OP_CONST, SVs_PADTMP);
-            if (SvPADTMP(o->op_sv)) {
-                /* If op_sv is already a PADTMP then it is being used by
-                 * some pad, so make a copy. */
-                sv_setsv(PL_curpad[ix],o->op_sv);
-                SvREADONLY_on(PL_curpad[ix]);
-                SvREFCNT_dec(o->op_sv);
-            }
-            else {
-                SvREFCNT_dec(PL_curpad[ix]);
-                SvPADTMP_on(o->op_sv);
-                PL_curpad[ix] = o->op_sv;
-                /* XXX I don't know how this isn't readonly already. */
-                SvREADONLY_on(PL_curpad[ix]);
-            }
-            o->op_sv = Nullsv;
-            o->op_targ = ix;
-        }
-        PL_curpad = tmp_pad;
+  /* Relocate const->op_sv to the pad for thread safety.
+   * Despite being a "constant", the SV is written to,
+   * for reference counts, sv_upgrade() etc. */
+  if ((cc_opclass(aTHX_ op) == OPc_SVOP) && ((SVOP*)op)->op_sv) {
+    SV** tmp_pad;
+    AV* padlist;
+    SV** svp;
+    SVOP* o = (SVOP*)op;
+    padlist = CvPADLIST(cv);
+    svp = AvARRAY(padlist);
+    tmp_pad = PL_curpad;
+    PL_curpad = AvARRAY((AV*)svp[1]);
+    PADOFFSET ix = Perl_pad_alloc(aTHX_ OP_CONST, SVs_PADTMP);
+    if (SvPADTMP(o->op_sv)) {
+      /* If op_sv is already a PADTMP then it is being used by
+       * some pad, so make a copy. */
+      sv_setsv(PL_curpad[ix],o->op_sv);
+      SvREADONLY_on(PL_curpad[ix]);
+      SvREFCNT_dec(o->op_sv);
+    }
+    else {
+      SvREFCNT_dec(PL_curpad[ix]);
+      SvPADTMP_on(o->op_sv);
+      PL_curpad[ix] = o->op_sv;
+      /* XXX I don't know how this isn't readonly already. */
+      SvREADONLY_on(PL_curpad[ix]);
+    }
+    o->op_sv = Nullsv;
+    o->op_targ = ix;
+    PL_curpad = tmp_pad;
+  }
 #endif
 }
 
@@ -968,9 +968,11 @@ PEEP_uninstall()
     uninstall(aTHX);
 
 void
-PEEP_relocatetopad(o,sv)
-    B::OP  o
-    SV*  sv
+PEEP__relocatetopad(o,cvref)
+      B::OP  o
+      SV*  cvref
     CODE:
-    sv = INT2PTR(SV*,SvIV(SvRV(sv)));
-    relocatetopad(aTHX_ o,(CV*)sv);
+    if (cvref) { 
+      CV* cv = INT2PTR(CV*, SvIV(SvRV(cvref)));
+      _relocatetopad(aTHX_ o, cv);
+    }
