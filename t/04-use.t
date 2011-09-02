@@ -7,7 +7,7 @@
 use Test;
 BEGIN {
   use Config;
-  plan (tests => 8, todo => $Config{useithreads} ? [7,8] : [])
+  plan (tests => 8); # todo => $Config{useithreads} ? [7,8] : [])
 };
 my $X = $^X =~ m/\s/ ? qq{"$^X"} : $^X;
 
@@ -24,13 +24,12 @@ ok(`$X -Mblib -e'use optimizer q(extend-c) => sub { print \$_[0]->name() }; 1;'`
 ok(`$X -Mblib -e'use optimizer 'C'; print 1;'`,
    '1');
 
-# the next two fail with ithreads in pad_alloc
-TODO: {
-  local $TODO = "fails with ithreads in pad_alloc" if $Config{useithreads};
+# the next two failed with ithreads in relocatetopad
+#TODO: {
+  #local $TODO = "fails with ithreads in pad_alloc" if $Config{useithreads};
 
-  ok(`$^X -Mblib -e'use optimizer 'perl'; print 1;'`,
+  ok(`$X -Mblib -e'use optimizer 'perl'; print 1;'`,
      '1');
-  ok(`$^X -Mblib -e'no optimizer; print 1;'`,
+  ok(`$X -Mblib -e'no optimizer; print 1;'`,
      '1');
-}
-
+#}
