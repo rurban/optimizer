@@ -25,7 +25,26 @@ WriteMakefile
 
 package MY;
 
-sub depend { "README : optimizer.pm\n\tpod2text optimizer.pm > README\n"; }
+sub depend { "README : optimizer.pm
+	pod2text optimizer.pm > README
+
+coverclean:
+	\$(PERL) -S cover -delete
+
+testcover : optimizer.c.gcov optimizer.xs.gcov cover_db/coverage.html
+
+optimizer.c.gcov optimizer.xs.gcov : optimizer.xs
+	\$(MAKE) CCFLAGS=\"\$(CCFLAGS) -fprofile-arcs -ftest-coverage\" LDDLFLAGS=\"\$(LDDLFLAGS) -fprofile-arcs -ftest-coverage\"
+	gcov optimizer.c optimizer.xs
+
+cover_db/coverage.html : optimizer.xs optimizer.pm \$(TEST_FILES)
+	PERL5OPT=-MDevel::Cover PERL_DL_NONLAZY=1 make test
+	# -\$(PERL) -S gcov2perl optimizer.c.gcov optimizer.xs.gcov
+	\$(PERL) -S cover
+
+gprof :
+	\$(MAKE) CCFLAGS=\"\$(CCFLAGS) -pg\" LDDLFLAGS=\"\$(LDDLFLAGS) -pg\"
+"; }
 
 sub test {
   local $_ = shift->SUPER::test(@_);
