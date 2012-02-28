@@ -338,7 +338,11 @@ c_extend_peep(pTHX_ register OP *o)
 #if PERL_VERSION < 10
 		     	PL_curcop->cop_arybase
 #else
+# if PERL_VERSION < 15
 			CopARYBASE_get(PL_curcop)
+# else
+		        0
+# endif
 #endif
 		     )	<= 255 &&
 		    i >= 0)

@@ -23,7 +23,7 @@ BEGIN {
 }
 
 require DynaLoader;
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 our @ISA = q(DynaLoader);
 our %callbacks;
 bootstrap optimizer $VERSION;
